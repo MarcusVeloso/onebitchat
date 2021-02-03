@@ -1,47 +1,39 @@
-class TeamsController < ApplicationController
-  before_action :set_team, only: [:destroy]
-  before_action :set_by_slug_team, only: [:show]
-
-  def index
-    @teams = current_user.teams
-  end
-
-  def show
-    authorize! :read, @team
-  end
+class ChannelsController < ApplicationController
+  before_action :set_channel, only: [:destroy, :show]
 
   def create
-    @team = Team.new(team_params)
+    @channel = Channel.new(channel_params)
+    authorize! :create, @channel
 
     respond_to do |format|
-      if @team.save
-        format.html { redirect_to "/#{@team.slug}" }
+      if @channel.save
+        format.json { render :show, status: :created }
       else
-        format.html { redirect_to main_app.root_url, notice: @team.errors }
+        format.json { render json: @channel.errors, status: :unprocessable_entity }
       end
     end
   end
 
   def destroy
-    authorize! :destroy, @team
-    @team.destroy
+    authorize! :destroy, @channel
+    @channel.destroy
 
     respond_to do |format|
       format.json { head :no_content }
     end
   end
 
+  def show
+    authorize! :read, @channel
+  end
+
   private
 
-  def set_by_slug_team
-    @team = Team.find_by(slug: params[:slug])
+  def set_channel
+    @channel = Channel.find(params[:id])
   end
 
-  def set_team
-    @team = Team.find(params[:id])
-  end
-
-  def team_params
-    params.require(:team).permit(:slug).merge(user: current_user)
+  def channel_params
+    params.require(:channel).permit(:slug, :team_id).merge(user: current_user)
   end
 end
